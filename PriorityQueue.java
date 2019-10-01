@@ -8,7 +8,7 @@ import java.util.Map;
  * Priorities cannot be negative.
  *
  * @author Jewell Day, Brody Pearman
- * @version Date
+ * @version 9/30/19
  *
  */
 public class PriorityQueue {
@@ -40,11 +40,14 @@ public class PriorityQueue {
 	 */
 	public void push(int priority, int element)
 	{
+		if(priority<0 || isPresent(element)){
+			throw new AssertionError();
+		}
 		Pair newElement = new Pair<>(priority, element);
 		heap.add(newElement);
 		//moves to correct position in heap and saves location
-		int location = percolateUp(heap.size()-1);
-		location.put(element, location);
+		int loc = percolateUpLeaf();
+		location.put(element, loc);
 	}
 
 	/**
@@ -57,7 +60,15 @@ public class PriorityQueue {
 	 *
 	 */
 	public void pop(){
-		// TODO: Fill in
+		if(isEmpty()){
+			throw new AssertionError();
+		}
+		else {
+			swap(0,size()-1);
+			Pair p=heap.remove(size()-1);
+			location.remove(p.element);
+			pushDownRoot();
+		}
 	}
 
 
@@ -71,7 +82,13 @@ public class PriorityQueue {
 	 *	</ul>
 	 */
 	public int topPriority() {
-		// TODO: Fill in
+		if(isEmpty()){
+			throw new AssertionError();
+		}
+		else {
+			return heap.get(0).priority;
+		
+		}
 	}
 
 
@@ -85,7 +102,13 @@ public class PriorityQueue {
 	 *	</ul>
 	 */
 	public int topElement() {
-		// TODO: Fill in
+		if(isEmpty()){
+			throw new AssertionError();
+		}
+		else {
+			return heap.get(0).element;
+		
+		}
 	}
 
 
@@ -103,7 +126,22 @@ public class PriorityQueue {
 	 *	</ul>
 	 */
 	public void changePriority(int newpriority, int element) {
-		// TODO: Fill in
+		if(newpriority<0 || isPresent(element)==false) {
+			throw new AssertionError();
+		}
+		else {
+			int index= location.get(element);
+			int oldP= heap.get(index).priority;
+			Pair p= new Pair(newpriority,element);
+			heap.add(index,p);
+			if (oldP < newpriority) {
+				pushDown(index);
+			}
+			else {
+				percolateUp(index);
+				
+			}
+		}
 	}
 
 
@@ -119,6 +157,9 @@ public class PriorityQueue {
 	 *	</ul>
 	 */
 	public int getPriority(int element) {
+		if(isPresent(element)==false) {
+			throw new AssertionError();
+		}
 		int elementLocation = location.get(element);
 		return heap.get(elementLocation).priority;
 	}
@@ -128,7 +169,7 @@ public class PriorityQueue {
 	 *  @return true if the queue contains no elements, false otherwise
 	 */
 	public boolean isEmpty() {
-		heap.isEmpty();
+		return heap.isEmpty();
 	}
 
 	/**
@@ -136,7 +177,7 @@ public class PriorityQueue {
 	 *  @return true if the element exists, false otherwise
 	 */
 	public boolean isPresent(int element) {
-		location.containsKey(element);
+		return location.containsKey(element);
 	}
 
 	/**
@@ -168,7 +209,34 @@ public class PriorityQueue {
 	 * @return the index in the list where the element is finally stored
 	 */
 	private int pushDown(int start_index) {
-		// TODO: Fill in
+		if(left(start_index)<heap.size()-1 && hasTwoChildren(start_index)==false) {
+			if(heap.get(left(start_index)).priority< heap.get(start_index).priority){
+				swap(start_index,left(start_index));
+				return pushDown(left(start_index));
+			}
+			else{
+				return start_index;
+			}
+		}
+		else if (hasTwoChildren(start_index)){
+			int priorityLeft= heap.get(left(start_index)).priority;
+			int priorityRight= heap.get(right(start_index)).priority;
+			int priorityParent= heap.get(start_index).priority;
+			if(priorityLeft<=priorityRight && priorityLeft<priorityParent){
+				swap(start_index,left(start_index));
+				return pushDown(left(start_index));
+			}
+			else if (priorityRight<priorityLeft && priorityRight<priorityParent) {
+				swap(start_index,right(start_index));
+				return pushDown(right(start_index));
+			}
+			else {
+				return start_index;
+			}
+		}
+		else {
+			return start_index;
+		}
 
 	}
 
@@ -178,7 +246,7 @@ public class PriorityQueue {
 	 * @return the index in the list where the element is finally stored
 	 */
 	private int percolateUp(int start_index) {
-		if(start_index != 0 && list.get(start_index). priority< list.get(parent(start_index)).priority)
+		if(start_index > 0 && heap.get(start_index). priority< heap.get(parent(start_index)).priority)
 		{
 			swap(start_index,parent(start_index));
 			return percolateUp(parent(start_index));
@@ -205,8 +273,8 @@ public class PriorityQueue {
 		//removes and re-adds their mappings
 		location.remove(e1.element);
 		location.remove(e2.element);
-		location.put(e1.element, j)
-		location.put(e2.element, i)
+		location.put((int)e1.element, j);
+		location.put((int)e2.element, i);
 	}
 
 	/**
@@ -234,7 +302,7 @@ public class PriorityQueue {
 	 */
 
 	private int parent(int child) {
-		return (child-1)/2
+		return (child-1)/2;
 	}
 
 
@@ -248,7 +316,7 @@ public class PriorityQueue {
 	 * @return the index in the list where the element is finally stored
 	 */
 	private int pushDownRoot() {
-		// TODO: A one-line function that calls pushDown()
+		return pushDown(0);// TODO: A one-line function that calls pushDown()
 	}
 
 	/**
@@ -258,7 +326,7 @@ public class PriorityQueue {
 	 * @return the index in the list where the element is finally stored
 	 */
 	private int percolateUpLeaf(){
-		// TODO: A one-line function that calls percolateUp()
+		return percolateUp(heap.size()-1);// TODO: A one-line function that calls percolateUp()
 	}
 
 	/**
@@ -267,10 +335,11 @@ public class PriorityQueue {
 	 * @return true if element is a leaf
 	 */
 	private boolean isLeaf(int i){
-		if(leftchild(i) > heap.size() -1)
+		if(left(i) > heap.size() -1)
 		{
-
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -279,21 +348,35 @@ public class PriorityQueue {
 	 * @return true if element in heap has two children
 	 */
 	private boolean hasTwoChildren(int i) {
-		// TODO: Fill in
+		int left=left(i);
+		int right=right(i);
+		int sizee=heap.size();
+		if(left<sizee-1 && right<sizee-1){
+			return true;
+		}
+		return false;
 	}
 
 	/**
 	 * Print the underlying list representation
 	 */
 	private void printHeap() {
-		// TODO: Fill in
+		for(Pair p: heap){
+			int a= (int)p.element;
+			int b=(int)p.priority;
+			String printable="(" + a + ", " + b + ")";
+			System.out.println(printable);
+		}
 	}
 
 	/**
 	 * Print the entries in the location map
 	 */
 	private void printMap() {
-		// TODO: Fill in
+		for(Integer key: location.keySet()){
+			String val= location.get(key).toString();
+			System.out.println("(" + key.toString() + ", " + val+ ")");
+		}
 	}
 
 
